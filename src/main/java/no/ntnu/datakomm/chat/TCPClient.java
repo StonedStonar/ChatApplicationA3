@@ -2,6 +2,7 @@ package no.ntnu.datakomm.chat;
 
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,7 +36,14 @@ public class TCPClient {
         }else {
             //Todo: her burde det kastes en exception eller lignende kanskje?
         }
+
+        sendMessage("joke", socket);
+        System.out.println(waitServerResponse());
         return valid;
+    }
+
+    public void sendJoke(){
+        sendMessage("joke", socket);
     }
 
     /**
@@ -45,7 +53,7 @@ public class TCPClient {
      * @return <code>true</code> if the message has been sent.
      *         <code>false</code> if the message could not be sent.
      */
-    private boolean sendMessage(String messageToSend, Socket socket){
+    private synchronized boolean sendMessage(String messageToSend, Socket socket){
         boolean valid = false;
         if (isConnectionActive()){
             try {
@@ -91,17 +99,16 @@ public class TCPClient {
     public synchronized void disconnect() {
         // TODO Step 4: implement this method
         // Hint: remember to check if connection is active
-        boolean valid = false;
         if (isConnectionActive()){
             try {
                 socket.close();
                 onDisconnect();
-                valid = true;
+                socket = null;
             }catch (IOException exception){
-                valid = false;
+                onDisconnect();
             }
         }else {
-
+            onDisconnect();
         }
 
     }
@@ -161,6 +168,7 @@ public class TCPClient {
         // TODO Step 5: implement this method
         // Hint: Use Wireshark and the provided chat client reference app to find out what commands the
         // client and server exchange for user listing.
+        sendMessage("users", socket);
     }
 
     /**
@@ -174,7 +182,8 @@ public class TCPClient {
         // TODO Step 6: Implement this method
         // Hint: Reuse sendCommand() method
         // Hint: update lastError if you want to store the reason for the error.
-        return false;
+
+        return sendMessage("privmsg " + recipient + " " + message, socket);
     }
 
 
@@ -247,7 +256,42 @@ public class TCPClient {
             // and act on it.
             // Hint: In Step 3 you need to handle only login-related responses.
             // Hint: In Step 3 reuse onLoginResult() method
+            String response = waitServerResponse();
 
+            if (response != null){
+                String[] responseInParts = response.split(" ");
+                String firstWord = responseInParts[0];
+                switch (firstWord) {
+                    case "loginok":
+                        onLoginResult(true, null);
+                        break;
+                    case "loginerr":
+                        onLoginResult(false, response);
+                        break;
+                    case "msg":
+                        String message = makeArrayToSentenceWithoutTwoFirstWords(responseInParts);
+                        onMsgReceived(false, responseInParts[1], message);
+                        break;
+                    case "privmsg":
+                        String message2 = makeArrayToSentenceWithoutTwoFirstWords(responseInParts);
+                        onMsgReceived(true, responseInParts[1], message2);
+                        break;
+                    case "msgerr":
+                        onMsgError(response);
+                        break;
+                    case "cmderr":
+                        onCmdError(response);
+                        break;
+                    case "supported":
+                        onSupported(responseInParts);
+                        break;
+                    case "joke":
+                        onMsgReceived(true, "Server", makeArrayToSentenceWithoutFirstWord(responseInParts));
+                        break;
+                    default:
+                        onUsersList(responseInParts);
+                }
+            }
             // TODO Step 5: update this method, handle user-list response from the server
             // Hint: In Step 5 reuse onUserList() method
 
@@ -261,9 +305,29 @@ public class TCPClient {
         }
     }
 
+    private String makeArrayToSentenceWithoutTwoFirstWords(String[] responseInParts){
+        List<String> words = Arrays.stream(responseInParts).filter(mess -> !mess.equals(responseInParts[0])).filter(mess -> !mess.equals(responseInParts[1])).toList();
+        StringBuilder stringBuilder = new StringBuilder();
+        words.forEach(word -> {
+            stringBuilder.append(word);
+            stringBuilder.append(" ");
+        });
+        return stringBuilder.toString();
+    }
+
+    public String makeArrayToSentenceWithoutFirstWord(String[] responseInParts){
+        List<String> words = Arrays.stream(responseInParts).filter(mess -> !mess.equals(responseInParts[0])).toList();
+        StringBuilder stringBuilder = new StringBuilder();
+        words.forEach(word -> {
+            stringBuilder.append(word);
+            stringBuilder.append(" ");
+        });
+        return stringBuilder.toString();
+    }
+
+
     /**
      * Register a new listener for events (login result, incoming message, etc)
-     *
      * @param listener
      */
     public void addListener(ChatListener listener) {
@@ -274,7 +338,6 @@ public class TCPClient {
 
     /**
      * Unregister an event listener
-     *
      * @param listener
      */
     public void removeListener(ChatListener listener) {
@@ -317,6 +380,7 @@ public class TCPClient {
      */
     private void onUsersList(String[] users) {
         // TODO Step 5: Implement this method
+        listeners.forEach(listener -> listener.onUserList(users));
     }
 
     /**
@@ -328,6 +392,8 @@ public class TCPClient {
      */
     private void onMsgReceived(boolean priv, String sender, String text) {
         // TODO Step 7: Implement this method
+        TextMessage textMessage = new TextMessage(sender, priv, text);
+        listeners.forEach(listener -> listener.onMessageReceived(textMessage));
     }
 
     /**
@@ -337,6 +403,7 @@ public class TCPClient {
      */
     private void onMsgError(String errMsg) {
         // TODO Step 7: Implement this method
+        listeners.forEach(listener -> listener.onMessageError(errMsg));
     }
 
     /**
@@ -346,6 +413,7 @@ public class TCPClient {
      */
     private void onCmdError(String errMsg) {
         // TODO Step 7: Implement this method
+        listeners.forEach(listener -> listener.onCommandError(errMsg));
     }
 
     /**
@@ -356,6 +424,7 @@ public class TCPClient {
      */
     private void onSupported(String[] commands) {
         // TODO Step 8: Implement this method
+        listeners.forEach(listener -> listener.onSupportedCommands(commands));
     }
 
 
