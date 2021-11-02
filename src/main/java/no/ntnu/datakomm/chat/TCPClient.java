@@ -7,8 +7,6 @@ import java.util.List;
 
 public class TCPClient {
 
-    private PrintWriter toServer;
-    private BufferedReader fromServer;
     private Socket socket;
 
     // Hint: if you want to store a message for the last error, store it here
@@ -72,6 +70,16 @@ public class TCPClient {
     }
 
     /**
+     * Makes a buffered reader for that socket.
+     * @param socket the socket you want the reader for.
+     * @return a buffered reader that is from this socket.
+     * @throws IOException get thrown if the buffered reader could not be made.
+     */
+    private BufferedReader getBufferedReader(Socket socket) throws IOException {
+        return new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    }
+
+    /**
      * Close the socket. This method must be synchronized, because several
      * threads may try to call it. For example: When "Disconnect" button is
      * pressed in the GUI thread, the connection will get closed. Meanwhile, the
@@ -83,6 +91,19 @@ public class TCPClient {
     public synchronized void disconnect() {
         // TODO Step 4: implement this method
         // Hint: remember to check if connection is active
+        boolean valid = false;
+        if (isConnectionActive()){
+            try {
+                socket.close();
+                onDisconnect();
+                valid = true;
+            }catch (IOException exception){
+                valid = false;
+            }
+        }else {
+
+        }
+
     }
 
     /**
@@ -93,6 +114,7 @@ public class TCPClient {
         return socket != null;
     }
 
+    //Todo: Denne metoden under skjønner jeg helt ikke men tror den skal være min "send message". But i like send message better.
     /**
      * Send a command to server.
      * @param cmd A command. It should include the command word and optional attributes, according to the protocol.
@@ -110,7 +132,6 @@ public class TCPClient {
 
     /**
      * Send a public message to all the recipients.
-     *
      * @param message Message to send
      * @return true if message sent, false on error
      */
@@ -118,8 +139,7 @@ public class TCPClient {
         // TODO Step 2: implement this method
         // Hint: Reuse sendCommand() method
         // Hint: update lastError if you want to store the reason for the error.
-        if ()
-        return false;
+        return sendMessage("msg " + message, socket);
     }
 
     /**
@@ -130,6 +150,7 @@ public class TCPClient {
     public void tryLogin(String username) {
         // TODO Step 3: implement this method
         // Hint: Reuse sendCommand() method
+        sendMessage("login " + username, socket);
     }
 
     /**
@@ -168,15 +189,26 @@ public class TCPClient {
 
     /**
      * Wait for chat server's response
-     *
      * @return one line of text (one command) received from the server
      */
     private String waitServerResponse() {
         // TODO Step 3: Implement this method
         // TODO Step 4: If you get I/O Exception or null from the stream, it means that something has gone wrong
         // with the stream and hence the socket. Probably a good idea to close the socket in that case.
+        String response = null;
+        if (isConnectionActive()){
+            try {
+                BufferedReader bufferedReader = getBufferedReader(socket);
+                do {
+                    response = bufferedReader.readLine();
+                }while (response == null);
+            }catch (IOException exception){
+                disconnect();
+                lastError = "Connection was severed.";
+            }
+        }
 
-        return null;
+        return response;
     }
 
     /**
@@ -275,6 +307,7 @@ public class TCPClient {
     private void onDisconnect() {
         // TODO Step 4: Implement this method
         // Hint: all the onXXX() methods will be similar to onLoginResult()
+        listeners.forEach(listener -> listener.onDisconnect());
     }
 
     /**
