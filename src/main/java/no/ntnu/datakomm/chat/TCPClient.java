@@ -6,9 +6,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TCPClient {
+
     private PrintWriter toServer;
     private BufferedReader fromServer;
-    private Socket connection;
+    private Socket socket;
 
     // Hint: if you want to store a message for the last error, store it here
     private String lastError = null;
@@ -17,7 +18,6 @@ public class TCPClient {
 
     /**
      * Connect to a chat server.
-     *
      * @param host host name or IP address of the chat server
      * @param port TCP port of the chat server
      * @return True on success, false otherwise
@@ -26,7 +26,49 @@ public class TCPClient {
         // TODO Step 1: implement this method
         // Hint: Remember to process all exceptions and return false on error
         // Hint: Remember to set up all the necessary input/output stream variables
-        return false;
+        boolean valid = false;
+        if (!isConnectionActive()){
+            try {
+                socket = new Socket(host, port);
+                valid = true;
+            }catch (IOException exception){
+                valid = false;
+            }
+        }else {
+            //Todo: her burde det kastes en exception eller lignende kanskje?
+        }
+        return valid;
+    }
+
+    /**
+     * Sends a message through the wanted socket.
+     * @param messageToSend the message you want to send.
+     * @param socket the socket this message is for.
+     * @return <code>true</code> if the message has been sent.
+     *         <code>false</code> if the message could not be sent.
+     */
+    private boolean sendMessage(String messageToSend, Socket socket){
+        boolean valid = false;
+        if (isConnectionActive()){
+            try {
+                PrintWriter printWriter = makePrintWriter(socket);
+                printWriter.println(messageToSend);
+                valid = true;
+            }catch (IOException exception){
+                valid = false;
+            }
+        }
+        return valid;
+    }
+
+    /**
+     * Makes a print writer that can be used in the code.
+     * @param socket the socket the writer is for.
+     * @throws IOException gets thrown if the print writer could not be made.
+     * @return the print writer for this socket.
+     */
+    private PrintWriter makePrintWriter(Socket socket) throws IOException {
+        return new PrintWriter(socket.getOutputStream(), true);
     }
 
     /**
@@ -44,22 +86,26 @@ public class TCPClient {
     }
 
     /**
+     * Checks if the connection is still an object.
      * @return true if the connection is active (opened), false if not.
      */
     public boolean isConnectionActive() {
-        return connection != null;
+        return socket != null;
     }
 
     /**
      * Send a command to server.
-     *
      * @param cmd A command. It should include the command word and optional attributes, according to the protocol.
      * @return true on success, false otherwise
      */
     private boolean sendCommand(String cmd) {
         // TODO Step 2: Implement this method
         // Hint: Remember to check if connection is active
-        return false;
+        boolean valid = false;
+        if (isConnectionActive()){
+            valid = sendMessage(cmd, socket);
+        }
+        return valid;
     }
 
     /**
@@ -72,6 +118,7 @@ public class TCPClient {
         // TODO Step 2: implement this method
         // Hint: Reuse sendCommand() method
         // Hint: update lastError if you want to store the reason for the error.
+        if ()
         return false;
     }
 
@@ -277,4 +324,6 @@ public class TCPClient {
     private void onSupported(String[] commands) {
         // TODO Step 8: Implement this method
     }
+
+
 }
