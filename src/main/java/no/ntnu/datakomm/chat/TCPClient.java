@@ -151,7 +151,6 @@ public class TCPClient {
 
     /**
      * Send a login request to the chat server.
-     *
      * @param username Username to use
      */
     public void tryLogin(String username) {
@@ -193,6 +192,7 @@ public class TCPClient {
     public void askSupportedCommands() {
         // TODO Step 8: Implement this method
         // Hint: Reuse sendCommand() method
+        sendMessage("help", socket);
     }
 
 
@@ -210,19 +210,17 @@ public class TCPClient {
                 BufferedReader bufferedReader = getBufferedReader(socket);
                 do {
                     response = bufferedReader.readLine();
-                }while (response == null);
+                }while ((response == null));
             }catch (IOException exception){
                 disconnect();
                 lastError = "Connection was severed.";
             }
         }
-
         return response;
     }
 
     /**
      * Get the last error message
-     *
      * @return Error message or "" if there has been no error
      */
     public String getLastError() {
@@ -288,7 +286,10 @@ public class TCPClient {
                     case "joke":
                         onMsgReceived(true, "Server", makeArrayToSentenceWithoutFirstWord(responseInParts));
                         break;
+                    case "msgok":
+                        break;
                     default:
+                        System.out.println(response);
                         onUsersList(responseInParts);
                 }
             }
@@ -305,20 +306,34 @@ public class TCPClient {
         }
     }
 
+    /**
+     * Makes an array of strings into a sentence.
+     * @param responseInParts the array you want to turn into a sentence.
+     * @return the sentence the array makes without the first two words.
+     */
     private String makeArrayToSentenceWithoutTwoFirstWords(String[] responseInParts){
         List<String> words = Arrays.stream(responseInParts).filter(mess -> !mess.equals(responseInParts[0])).filter(mess -> !mess.equals(responseInParts[1])).toList();
-        StringBuilder stringBuilder = new StringBuilder();
-        words.forEach(word -> {
-            stringBuilder.append(word);
-            stringBuilder.append(" ");
-        });
-        return stringBuilder.toString();
+        return getListAsString(words);
     }
 
+    /**
+     * Makes an array to a sentence wihtout the first word.
+     * @param responseInParts the array of strings.
+     * @return a sentence without the first word in the array.
+     */
     public String makeArrayToSentenceWithoutFirstWord(String[] responseInParts){
         List<String> words = Arrays.stream(responseInParts).filter(mess -> !mess.equals(responseInParts[0])).toList();
+        return getListAsString(words);
+    }
+
+    /**
+     * Makes a list of words into a string.
+     * @param listOfWords the list with all the words.
+     * @return the sentence from that list.
+     */
+    private String getListAsString(List<String> listOfWords){
         StringBuilder stringBuilder = new StringBuilder();
-        words.forEach(word -> {
+        listOfWords.forEach(word -> {
             stringBuilder.append(word);
             stringBuilder.append(" ");
         });
@@ -328,7 +343,7 @@ public class TCPClient {
 
     /**
      * Register a new listener for events (login result, incoming message, etc)
-     * @param listener
+     * @param listener an object that wants updates from this client.
      */
     public void addListener(ChatListener listener) {
         if (!listeners.contains(listener)) {
@@ -338,7 +353,7 @@ public class TCPClient {
 
     /**
      * Unregister an event listener
-     * @param listener
+     * @param listener an object that wants to unsubscribe from this object.
      */
     public void removeListener(ChatListener listener) {
         listeners.remove(listener);
@@ -353,7 +368,6 @@ public class TCPClient {
     /**
      * Notify listeners that login operation is complete (either with success or
      * failure)
-     *
      * @param success When true, login successful. When false, it failed
      * @param errMsg  Error message if any
      */
@@ -375,7 +389,6 @@ public class TCPClient {
 
     /**
      * Notify listeners that server sent us a list of currently connected users
-     *
      * @param users List with usernames
      */
     private void onUsersList(String[] users) {
@@ -408,8 +421,7 @@ public class TCPClient {
 
     /**
      * Notify listeners that command was not understood by the server.
-     *
-     * @param errMsg Error message
+     * @param errMsg Error message0
      */
     private void onCmdError(String errMsg) {
         // TODO Step 7: Implement this method
@@ -419,7 +431,6 @@ public class TCPClient {
     /**
      * Notify listeners that a help response (supported commands) was received
      * from the server
-     *
      * @param commands Commands supported by the server
      */
     private void onSupported(String[] commands) {

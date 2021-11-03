@@ -8,7 +8,9 @@ import java.util.Objects;
 public class TextMessage {
 
     private final String sender;
+
     private final boolean priv;
+
     private final String text;
 
     /**

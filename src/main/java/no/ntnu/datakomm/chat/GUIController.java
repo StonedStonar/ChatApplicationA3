@@ -136,6 +136,7 @@ public class GUIController implements ChatListener {
                 // Split the message in max 3 parts. If the first one is "/privmsg", then recipient is the second
                 // part and the text to send is the third. Otherwise, the whole message is sent as a public message.
                 String[] msgParts = msgToSend.split(" ", 3);
+                //Todo: Denne gjør slik at vi kan få jokes.
                 if (msgParts[0].equals("/joke")){
                     tcpClient.sendJoke();
                 }else if (msgParts.length == 3 && msgParts[0].equals("/privmsg")) {
@@ -156,7 +157,6 @@ public class GUIController implements ChatListener {
 
     /**
      * Add a message to the GUI chat window
-     *
      * @param local   When true, this message was sent by us. When false -
      *                received from another user
      * @param msg     The message to be displayed
@@ -220,7 +220,6 @@ public class GUIController implements ChatListener {
     /**
      * Start a connection to the server: try to connect Socket, log in and start
      * listening for incoming messages
-     *
      * @param host The host to connect to (domain name or IP address)
      * @param port Remote TCP port
      */
@@ -322,7 +321,6 @@ public class GUIController implements ChatListener {
     /**
      * This method is called (by the TcpClient) when a login procedure is done: either it succeeded
      * or failed.
-     *
      * @param success when true, the client has logged in, when false, login
      *                failed
      * @param errMsg  Error message in case of failure, or null on successful
@@ -343,7 +341,6 @@ public class GUIController implements ChatListener {
 
     /**
      * This method is called when an incoming text message is received
-     *
      * @param message Message that from another (chat server has forwarded it)
      */
     @Override
@@ -368,7 +365,6 @@ public class GUIController implements ChatListener {
     /**
      * This method is called when a list of currently connected users is
      * received
-     *
      * @param usernames Array with usernames of currently connected users
      */
     @Override
@@ -393,7 +389,6 @@ public class GUIController implements ChatListener {
     /**
      * This method is called when a list of currently supported commands is
      * received
-     *
      * @param commands Array with supported commands
      */
     @Override
@@ -414,7 +409,6 @@ public class GUIController implements ChatListener {
 
     /**
      * This method is called when the server did not understand the last command
-     *
      * @param errMsg Error message
      */
     @Override
