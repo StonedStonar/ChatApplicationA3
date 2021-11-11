@@ -288,9 +288,12 @@ public class TCPClient {
                         break;
                     case "msgok":
                         break;
+                    case "users":
+                        onUsersList(responseInParts);
+                        break;
                     default:
                         System.out.println(response);
-                        onUsersList(responseInParts);
+                        break;
                 }
             }
             // TODO Step 5: update this method, handle user-list response from the server
@@ -411,7 +414,6 @@ public class TCPClient {
 
     /**
      * Notify listeners that our message was not delivered
-     *
      * @param errMsg Error description returned by the server
      */
     private void onMsgError(String errMsg) {
