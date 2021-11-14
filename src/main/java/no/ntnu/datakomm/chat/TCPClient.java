@@ -132,11 +132,7 @@ public class TCPClient {
     private boolean sendCommand(String cmd) {
         // TODO Step 2: Implement this method
         // Hint: Remember to check if connection is active
-        boolean valid = false;
-        if (isConnectionActive()){
-            valid = sendMessage(cmd, socket);
-        }
-        return valid;
+        return sendMessage(cmd, socket);
     }
 
     /**
@@ -328,13 +324,14 @@ public class TCPClient {
         return users;
     }
 
+
     /**
      * Makes an array of strings into a sentence.
      * @param responseInParts the array you want to turn into a sentence.
      * @return the sentence the array makes without the first two words.
      */
     private String makeArrayToSentenceWithoutTwoFirstWords(String[] responseInParts){
-        List<String> words = Arrays.stream(responseInParts).filter(mess -> !mess.equals(responseInParts[0])).filter(mess -> !mess.equals(responseInParts[1])).toList();
+        List<String> words = Arrays.stream(responseInParts).filter(mess -> mess != responseInParts[0]).filter(mess -> mess != responseInParts[1]).toList();
         return getListAsString(words);
     }
 
@@ -344,7 +341,7 @@ public class TCPClient {
      * @return a sentence without the first word in the array.
      */
     private String makeArrayToSentenceWithoutFirstWord(String[] responseInParts){
-        List<String> words = Arrays.stream(responseInParts).filter(mess -> !mess.equals(responseInParts[0])).toList();
+        List<String> words = Arrays.stream(responseInParts).filter(mess -> mess != responseInParts[0]).toList();
         return getListAsString(words);
     }
 
