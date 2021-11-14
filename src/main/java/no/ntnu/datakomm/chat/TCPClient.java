@@ -36,12 +36,12 @@ public class TCPClient {
         }else {
             //Todo: her burde det kastes en exception eller lignende kanskje?
         }
-
-        sendMessage("joke", socket);
-        System.out.println(waitServerResponse());
         return valid;
     }
 
+    /**
+     * Sends a request for a joke to the server.
+     */
     public void sendJoke(){
         sendMessage("joke", socket);
     }
@@ -63,6 +63,8 @@ public class TCPClient {
             }catch (IOException exception){
                 valid = false;
             }
+        }else {
+            onDisconnect();
         }
         return valid;
     }
@@ -289,7 +291,7 @@ public class TCPClient {
                     case "msgok":
                         break;
                     case "users":
-                        onUsersList(responseInParts);
+                        onUsersList(getUsersAsArray(responseInParts));
                         break;
                     default:
                         System.out.println(response);
@@ -310,6 +312,23 @@ public class TCPClient {
     }
 
     /**
+     * Gets the users as an array without the first users part.
+     * @param response the response.
+     * @return an array without the first word.
+     */
+    private String[] getUsersAsArray(String[] response){
+        String[] users = new String[response.length - 1];
+        int i = 0;
+        for (String word : response) {
+            if (word != response[0]){
+                users[i] = word;
+                i++;
+            }
+        }
+        return users;
+    }
+
+    /**
      * Makes an array of strings into a sentence.
      * @param responseInParts the array you want to turn into a sentence.
      * @return the sentence the array makes without the first two words.
@@ -324,7 +343,7 @@ public class TCPClient {
      * @param responseInParts the array of strings.
      * @return a sentence without the first word in the array.
      */
-    public String makeArrayToSentenceWithoutFirstWord(String[] responseInParts){
+    private String makeArrayToSentenceWithoutFirstWord(String[] responseInParts){
         List<String> words = Arrays.stream(responseInParts).filter(mess -> !mess.equals(responseInParts[0])).toList();
         return getListAsString(words);
     }
@@ -401,7 +420,6 @@ public class TCPClient {
 
     /**
      * Notify listeners that a message is received from the server
-     *
      * @param priv   When true, this is a private message
      * @param sender Username of the sender
      * @param text   Message text

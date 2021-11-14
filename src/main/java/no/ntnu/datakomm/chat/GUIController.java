@@ -352,7 +352,6 @@ public class GUIController implements ChatListener {
     /**
      * This method is called when an error happened when we tried to send
      * message to the server (the message was not sent to necessary recipients)
-     *
      * @param errMsg Error message
      */
     @Override
